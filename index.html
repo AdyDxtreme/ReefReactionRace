@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reef Reaction Race - Chemistry Adventure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes bubble {
+            0% { transform: translateY(0) scale(1); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
+        }
+        
+        .bubble {
+            animation: bubble 2s ease-out infinite;
+        }
+        
+        @keyframes jellyFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+        }
+        
+        .jelly-float {
+            animation: jellyFloat 3s ease-in-out infinite;
+        }
+        
+        .reaction-tube {
+            background: linear-gradient(to bottom, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 100%);
+            border-radius: 10px 10px 0 0;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        }
+        
+        .molecule {
+            transition: all 0.3s ease;
+        }
+        
+        .progress-wave {
+            background: linear-gradient(90deg, rgba(0,212,255,0.5) 0%, rgba(9,9,121,0.7) 50%, rgba(0,212,255,0.5) 100%);
+            animation: wave 3s linear infinite;
+            background-size: 200% 100%;
+        }
+        
+        @keyframes wave {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        
+        .tooltip {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .has-tooltip:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-blue-900 text-white min-h-screen overflow-x-hidden">
+    <!-- Game Container -->
+    <div class="container mx-auto px-4 py-8 relative">
+        <!-- Background Elements -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-blue-900 to-transparent z-0"></div>
+            <div class="absolute bottom-0 left-0 w-full h-40 bg-blue-800 opacity-20"></div>
+            
+            <!-- Coral Reef -->
+            <div class="absolute bottom-0 left-0 w-full flex justify-between px-10">
+                <div class="h-40 w-20 bg-pink-600 rounded-t-full transform -skew-x-12"></div>
+                <div class="h-32 w-16 bg-purple-600 rounded-t-full"></div>
+                <div class="h-48 w-24 bg-green-600 rounded-t-full transform skew-x-12"></div>
+                <div class="h-36 w-20 bg-yellow-500 rounded-t-full"></div>
+                <div class="h-28 w-16 bg-red-500 rounded-t-full transform -skew-x-6"></div>
+            </div>
+            
+            <!-- Bubbles -->
+            <div class="absolute bottom-0 left-0 w-full h-full pointer-events-none">
+                <div class="absolute bottom-10 left-1/4 bubble w-4 h-4 rounded-full bg-white opacity-30" style="animation-delay: 0s;"></div>
+                <div class="absolute bottom-20 left-3/4 bubble w-3 h-3 rounded-full bg-white opacity-20" style="animation-delay: 0.5s;"></div>
+                <div class="absolute bottom-40 left-1/3 bubble w-5 h-5 rounded-full bg-white opacity-25" style="animation-delay: 1s;"></div>
+                <div class="absolute bottom-60 left-2/3 bubble w-2 h-2 rounded-full bg-white opacity-15" style="animation-delay: 1.5s;"></div>
+                <div class="absolute bottom-30 left-1/2 bubble w-3 h-3 rounded-full bg-white opacity-20" style="animation-delay: 2s;"></div>
+            </div>
+        </div>
+        
+        <!-- Header -->
+        <header class="relative z-10 text-center mb-12">
+            <h1 class="text-5xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600">
+                <i class="fas fa-water mr-3"></i> Reef Reaction Race
+            </h1>
+            <p class="text-xl text-blue-200 max-w-2xl mx-auto">
+                Help the jellyfish scientists accelerate reactions and restore balance to the coral reef!
+            </p>
+        </header>
+        
+        <!-- Main Game Area -->
+        <main class="relative z-10">
+            <!-- Level Selector -->
+            <div id="level-selector" class="bg-blue-800 bg-opacity-70 rounded-xl p-6 mb-8 backdrop-blur-sm border border-blue-600">
+                <h2 class="text-2xl font-bold mb-4 flex items-center">
+                    <i class="fas fa-layer-group mr-2 text-cyan-300"></i> Choose Your Mission
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Reaction Rate Levels -->
+                    <div class="bg-blue-900 bg-opacity-60 p-4 rounded-lg border border-blue-700">
+                        <h3 class="font-bold text-lg mb-3 text-cyan-300 flex items-center">
+                            <i class="fas fa-tachometer-alt mr-2"></i> Reaction Rate Challenges
+                        </h3>
+                        <div class="space-y-2">
+                            <button class="level-btn w-full text-left px-3 py-2 rounded bg-blue-700 hover:bg-blue-600 transition flex items-center justify-between" data-level="1">
+                                <span>Level 1: Temperature Effects</span>
+                                <i class="fas fa-thermometer-half"></i>
+                            </button>
+                            <button class="level-btn w-full text-left px-3 py-2 rounded bg-blue-700 hover:bg-blue-600 transition flex items-between" data-level="2">
+                                <span>Level 2: Concentration</span>
+                                <i class="fas fa-flask"></i>
+                            </button>
+                            <button class="level-btn w-full text-left px-3 py-2 rounded bg-blue-700 hover:bg-blue-600 transition flex items-between" data-level="3">
+                                <span>Level 3: Catalysts</span>
+                                <i class="fas fa-atom"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Equilibrium Levels -->
+                    <div class="bg-blue-900 bg-opacity-60 p-4 rounded-lg border border-blue-700">
+                        <h3 class="font-bold text-lg mb-3 text-purple-300 flex items-center">
+                            <i class="fas fa-balance-scale mr-2"></i> Equilibrium Challenges
+                        </h3>
+                        <div class="space-y-2">
+                            <button class="level-btn w-full text-left px-3 py-2 rounded bg-blue-700 hover:bg-blue-600 transition flex items-between" data-level="4">
+                                <span>Level 4: Concentration Shifts</span>
+                                <i class="fas fa-vial"></i>
+                            </button>
+                            <button class="level-btn w-full text-left px-3 py-2 rounded bg-blue-700 hover:bg-blue-600 transition flex items-between" data-level="5">
+                                <span>Level 5: Pressure Effects</span>
+                                <i class="fas fa-compress-alt"></i>
+                            </button>
+                            <button class="level-btn w-full text-left px-3 py-2 rounded bg-blue-700 hover:bg-blue-600 transition flex items-between" data-level="6">
+                                <span>Level 6: Temperature Shifts</span>
+                                <i class="fas fa-temperature-high"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Player Stats -->
+                    <div class="bg-blue-900 bg-opacity-60 p-4 rounded-lg border border-blue-700">
+                        <h3 class="font-bold text-lg mb-3 text-yellow-300 flex items-center">
+                            <i class="fas fa-star mr-2"></i> Your Progress
+                        </h3>
+                        <div class="space-y-3">
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm">Reef Health</span>
+                                    <span class="text-sm" id="reef-health">0%</span>
+                                </div>
+                                <div class="w-full bg-blue-700 rounded-full h-2.5">
+                                    <div id="reef-health-bar" class="bg-green-400 h-2.5 rounded-full" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm">Knowledge Points</span>
+                                    <span class="text-sm" id="knowledge-points">0</span>
+                                </div>
+                                <div class="w-full bg-blue-700 rounded-full h-2.5">
+                                    <div id="knowledge-bar" class="bg-cyan-400 h-2.5 rounded-full" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="pt-2">
+                                <p class="text-sm text-blue-200">
+                                    <i class="fas fa-info-circle mr-1"></i> Complete levels to restore the reef and earn knowledge!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Game Screen (initially hidden) -->
+            <div id="game-screen" class="hidden bg-blue-800 bg-opacity-70 rounded-xl p-6 mb-8 backdrop-blur-sm border border-blue-600">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 id="level-title" class="text-2xl font-bold flex items-center">
+                        <i class="fas fa-flask mr-2"></i> <span>Level 1: Temperature Effects</span>
+                    </h2>
+                    <button id="back-to-levels" class="px-4 py-2 bg-blue-700 hover:bg-blue-600 rounded-lg transition flex items-center">
+                        <i class="fas fa-arrow-left mr-2"></i> Level Select
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Left Panel - Reaction Visualizer -->
+                    <div class="lg:col-span-2 bg-blue-900 bg-opacity-60 p-4 rounded-lg border border-blue-700">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-lg flex items-center">
+                                <i class="fas fa-vial mr-2"></i> Reaction Chamber
+                            </h3>
+                            <div class="flex space-x-2">
+                                <button id="start-reaction" class="px-3 py-1 bg-green-600 hover:bg-green-500 rounded text-sm transition">
+                                    <i class="fas fa-play mr-1"></i> Start
+                                </button>
+                                <button id="reset-reaction" class="px-3 py-1 bg-red-600 hover:bg-red-500 rounded text-sm transition">
+                                    <i class="fas fa-redo mr-1"></i> Reset
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Reaction Visualization -->
+                        <div class="relative h-64 md:h-80 bg-blue-950 rounded-lg overflow-hidden mb-4">
+                            <!-- Background elements -->
+                            <div class="absolute inset-0 flex items-end">
+                                <!-- Reaction tubes -->
+                                <div class="absolute bottom-0 left-1/4 transform -translate-x-1/2 w-16 h-40 reaction-tube">
+                                    <div id="reaction-liquid" class="absolute bottom-0 left-0 right-0 bg-blue-500 transition-all duration-500" style="height: 30%;"></div>
+                                    <div id="molecules-container" class="absolute inset-0 overflow-hidden">
+                                        <!-- Molecules will be added here by JavaScript -->
+                                    </div>
+                                </div>
+                                
+                                <!-- Jellyfish scientist -->
+                                <div class="absolute bottom-0 right-1/4 transform translate-x-1/2 jelly-float">
+                                    <div class="relative w-16 h-20">
+                                        <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-purple-400 rounded-full opacity-70"></div>
+                                        <div class="absolute top-2 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-purple-300 rounded-full">
+                                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full"></div>
+                                            <div class="absolute top-1/4 left-1/4 w-1 h-1 bg-black rounded-full"></div>
+                                        </div>
+                                        <div class="absolute top-10 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-purple-400"></div>
+                                        <div class="absolute top-12 left-1/2 transform -translate-x-1/2 flex space-x-1">
+                                            <div class="w-1 h-4 bg-purple-300 rounded-full"></div>
+                                            <div class="w-1 h-6 bg-purple-300 rounded-full"></div>
+                                            <div class="w-1 h-5 bg-purple-300 rounded-full"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Pollution particles -->
+                            <div id="pollution-particles" class="absolute inset-0 pointer-events-none">
+                                <!-- Pollution particles will be added here by JavaScript -->
+                            </div>
+                            
+                            <!-- Progress wave -->
+                            <div id="progress-wave" class="absolute bottom-0 left-0 right-0 h-2 progress-wave opacity-0 transition-opacity"></div>
+                        </div>
+                        
+                        <!-- Reaction progress -->
+                        <div class="mb-4">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm">Reaction Progress</span>
+                                <span class="text-sm" id="reaction-progress">0%</span>
+                            </div>
+                            <div class="w-full bg-blue-700 rounded-full h-2.5">
+                                <div id="reaction-progress-bar" class="bg-cyan-400 h-2.5 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Time elapsed -->
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm">Time Elapsed: <span id="time-elapsed">0</span>s</span>
+                            <span class="text-sm">Reaction Rate: <span id="reaction-rate">0</span> mol/s</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Panel - Controls and Info -->
+                    <div class="bg-blue-900 bg-opacity-60 p-4 rounded-lg border border-blue-700">
+                        <h3 class="font-bold text-lg mb-4 flex items-center">
+                            <i class="fas fa-sliders-h mr-2"></i> Reaction Controls
+                        </h3>
+                        
+                        <!-- Variable Controls -->
+                        <div id="variable-controls" class="space-y-4">
+                            <!-- Temperature Control -->
+                            <div class="has-tooltip relative">
+                                <label class="block text-sm font-medium mb-1 flex items-center">
+                                    <i class="fas fa-thermometer-half mr-2 text-red-400"></i> Temperature (°C)
+                                </label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="range" id="temperature" min="10" max="90" value="25" class="w-full h-2 bg-blue-700 rounded-lg appearance-none cursor-pointer">
+                                    <span id="temperature-value" class="text-sm w-12 text-center">25</span>
+                                </div>
+                                <div class="tooltip absolute z-10 w-64 p-2 mt-1 text-sm text-white bg-blue-900 rounded-lg shadow-lg border border-blue-700">
+                                    Increasing temperature provides more kinetic energy to molecules, increasing collision frequency and energy.
+                                </div>
+                            </div>
+                            
+                            <!-- Concentration Control -->
+                            <div class="has-tooltip relative">
+                                <label class="block text-sm font-medium mb-1 flex items-center">
+                                    <i class="fas fa-flask mr-2 text-blue-400"></i> Concentration (mol/L)
+                                </label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="range" id="concentration" min="0.1" max="2" step="0.1" value="1" class="w-full h-2 bg-blue-700 rounded-lg appearance-none cursor-pointer">
+                                    <span id="concentration-value" class="text-sm w-12 text-center">1.0</span>
+                                </div>
+                                <div class="tooltip absolute z-10 w-64 p-2 mt-1 text-sm text-white bg-blue-900 rounded-lg shadow-lg border border-blue-700">
+                                    Higher concentration means more reactant particles per unit volume, leading to more frequent collisions.
+                                </div>
+                            </div>
+                            
+                            <!-- Catalyst Toggle -->
+                            <div class="has-tooltip relative">
+                                <label class="block text-sm font-medium mb-1 flex items-center">
+                                    <i class="fas fa-atom mr-2 text-green-400"></i> Add Catalyst
+                                </label>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="catalyst" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-blue-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                                    <span class="ml-3 text-sm" id="catalyst-status">Off</span>
+                                </label>
+                                <div class="tooltip absolute z-10 w-64 p-2 mt-1 text-sm text-white bg-blue-900 rounded-lg shadow-lg border border-blue-700">
+                                    Catalysts provide an alternative reaction pathway with lower activation energy, increasing reaction rate without being consumed.
+                                </div>
+                            </div>
+                            
+                            <!-- Surface Area Control (for some levels) -->
+                            <div id="surface-area-control" class="has-tooltip relative hidden">
+                                <label class="block text-sm font-medium mb-1 flex items-center">
+                                    <i class="fas fa-cubes mr-2 text-yellow-400"></i> Surface Area
+                                </label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="range" id="surface-area" min="1" max="5" value="3" class="w-full h-2 bg-blue-700 rounded-lg appearance-none cursor-pointer">
+                                    <span id="surface-area-value" class="text-sm w-12 text-center">3</span>
+                                </div>
+                                <div class="tooltip absolute z-10 w-64 p-2 mt-1 text-sm text-white bg-blue-900 rounded-lg shadow-lg border border-blue-700">
+                                    Greater surface area exposes more reactant particles to collisions, increasing reaction rate.
+                                </div>
+                            </div>
+                            
+                            <!-- Pressure Control (for equilibrium levels) -->
+                            <div id="pressure-control" class="has-tooltip relative hidden">
+                                <label class="block text-sm font-medium mb-1 flex items-center">
+                                    <i class="fas fa-compress-alt mr-2 text-purple-400"></i> Pressure (atm)
+                                </label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="range" id="pressure" min="0.5" max="3" step="0.1" value="1" class="w-full h-2 bg-blue-700 rounded-lg appearance-none cursor-pointer">
+                                    <span id="pressure-value" class="text-sm w-12 text-center">1.0</span>
+                                </div>
+                                <div class="tooltip absolute z-10 w-64 p-2 mt-1 text-sm text-white bg-blue-900 rounded-lg shadow-lg border border-blue-700">
+                                    Changing pressure affects equilibrium position for reactions involving gases. The system shifts to reduce the effect of the change.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Current Reaction Display -->
+                        <div id="reaction-display" class="mt-6 p-3 bg-blue-950 rounded-lg border border-blue-800">
+                            <h4 class="font-medium text-sm mb-2 flex items-center">
+                                <i class="fas fa-receipt mr-2"></i> Current Reaction:
+                            </h4>
+                            <div id="reaction-equation" class="text-center text-lg font-mono">
+                                2H₂ + O₂ → 2H₂O
+                            </div>
+                            <div id="reaction-info" class="text-xs text-blue-300 mt-2">
+                                This is an exothermic reaction. Increasing temperature will favor the reverse reaction.
+                            </div>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <button id="submit-reaction" class="w-full mt-6 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-lg font-medium transition flex items-center justify-center">
+                            <i class="fas fa-check mr-2"></i> Purify This Reaction
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Feedback Area -->
+                <div id="feedback-area" class="mt-6 hidden">
+                    <div class="bg-blue-900 bg-opacity-60 p-4 rounded-lg border border-blue-700">
+                        <h3 class="font-bold text-lg mb-3 flex items-center">
+                            <i class="fas fa-comment-alt mr-2"></i> Scientific Feedback
+                        </h3>
+                        <div id="feedback-content" class="space-y-3">
+                            <!-- Feedback will be inserted here -->
+                        </div>
+                        <div class="mt-4 flex justify-between items-center">
+                            <div id="score-display" class="text-lg font-bold">
+                                Score: <span id="score">0</span> points
+                            </div>
+                            <button id="next-level" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg transition hidden">
+                                Next Level <i class="fas fa-arrow-right ml-2"></i>
+                            </button>
+                            <button id="try-again" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition">
+                                <i class="fas fa-redo mr-2"></i> Try Again
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Instructions Modal -->
+            <div id="instructions-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4 py-6 hidden">
+                <div class="bg-blue-900 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-blue-600">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-2xl font-bold flex items-center">
+                                <i class="fas fa-info-circle mr-3 text-cyan-400"></i> How to Play
+                            </h3>
+                            <button id="close-instructions" class="text-2xl hover:text-cyan-300">&times;</button>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="p-4 bg-blue-800 rounded-lg">
+                                <h4 class="font-bold text-lg mb-2 text-cyan-300">Game Objective</h4>
+                                <p>
+                                    Help the jellyfish scientists accelerate chemical reactions and maintain equilibrium to purify the polluted coral reef. 
+                                    Each level focuses on different chemistry concepts that affect reaction rates and equilibrium positions.
+                                </p>
+                            </div>
+                            
+                            <div class="p-4 bg-blue-800 rounded-lg">
+                                <h4 class="font-bold text-lg mb-2 text-purple-300">Controls</h4>
+                                <ul class="space-y-2">
+                                    <li class="flex items-start">
+                                        <i class="fas fa-sliders-h mt-1 mr-2 text-blue-300"></i>
+                                        <span>Adjust the sliders to change reaction conditions (temperature, concentration, etc.)</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-play mt-1 mr-2 text-green-300"></i>
+                                        <span>Click "Start" to begin the reaction simulation</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-redo mt-1 mr-2 text-red-300"></i>
+                                        <span>Click "Reset" to stop the reaction and reset parameters</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check mt-1 mr-2 text-cyan-300"></i>
+                                        <span>Submit your reaction when you've optimized the conditions</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            
+                            <div class="p-4 bg-blue-800 rounded-lg">
+                                <h4 class="font-bold text-lg mb-2 text-yellow-300">Chemistry Concepts</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="bg-blue-900 p-3 rounded border border-blue-700">
+                                        <h5 class="font-medium mb-1 text-cyan-200">Reaction Rate</h5>
+                                        <p class="text-sm">
+                                            Affected by temperature, concentration, surface area, and catalysts. Your goal is to maximize the reaction rate to clean the reef quickly.
+                                        </p>
+                                    </div>
+                                    <div class="bg-blue-900 p-3 rounded border border-blue-700">
+                                        <h5 class="font-medium mb-1 text-purple-200">Chemical Equilibrium</h5>
+                                        <p class="text-sm">
+                                            In later levels, you'll need to balance reversible reactions using Le Chatelier's Principle to maintain equilibrium.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="p-4 bg-blue-800 rounded-lg">
+                                <h4 class="font-bold text-lg mb-2 text-green-300">Scoring</h4>
+                                <ul class="space-y-2">
+                                    <li class="flex items-start">
+                                        <i class="fas fa-star mt-1 mr-2 text-yellow-300"></i>
+                                        <span>Points awarded for faster reaction rates and correct equilibrium positions</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-heart mt-1 mr-2 text-red-300"></i>
+                                        <span>Restore reef health by completing levels successfully</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-brain mt-1 mr-2 text-blue-300"></i>
+                                        <span>Earn knowledge points by understanding the chemistry concepts</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 text-center">
+                            <button id="start-playing" class="px-6 py-3 bg-cyan-600 hover:bg-cyan-500 rounded-lg font-bold text-lg transition">
+                                <i class="fas fa-play mr-2"></i> Start Playing!
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="relative z-10 text-center text-blue-300 text-sm mt-12">
+            <p>Reef Reaction Race - An Educational Chemistry Game for High School Students</p>
+            <p class="mt-1">© 2023 Jellyfish Science Team | Aligned with NGSS Standards</p>
+            <button id="show-instructions" class="mt-4 px-4 py-2 bg-blue-800 hover:bg-blue-700 rounded-lg transition">
+                <i class="fas fa-question-circle mr-2"></i> Show Instructions
+            </button>
+        </footer>
+    </div>
+
+    <script>
+        // Game State
+        const gameState = {
+            currentLevel: 0,
+            reefHealth: 0,
+            knowledgePoints: 0,
+            levelsCompleted: 0,
+            reactionRunning: false,
+            reactionProgress: 0,
+            reactionStartTime: 0,
+            reactionInterval: null,
+            reactionRate: 0,
+            lastReactionTime: 0,
+            moleculeCount: 20,
+            pollutionCount: 30
+        };
+
+        // Level Data
+        const levels = [
+            {
+                title: "Level 1: Temperature Effects",
+                equation: "2H₂ + O₂ → 2H₂O",
+                info: "This is an exothermic reaction. Increasing temperature will increase the reaction rate by providing more kinetic energy to molecules.",
+                variables: ["temperature", "concentration"],
+                optimal: { temperature: 70, concentration: 1.5 },
+                feedback: "Remember: Higher temperature means more molecules have sufficient energy to overcome the activation energy barrier."
+            },
+            {
+                title: "Level 2: Concentration",
+                equation: "Mg + 2HCl → MgCl₂ + H₂",
+                info: "This reaction depends on the concentration of hydrochloric acid. More concentrated acid means more frequent collisions.",
+                variables: ["temperature", "concentration"],
+                optimal: { temperature: 40, concentration: 1.8 },
+                feedback: "Higher concentration means more reactant particles per unit volume, leading to more frequent collisions."
+            },
+            {
+                title: "Level 3: Catalysts",
+                equation: "2H₂O₂ → 2H₂O + O₂",
+                info: "This decomposition reaction can be sped up dramatically with a catalyst (MnO₂).",
+                variables: ["temperature", "concentration", "catalyst"],
+                optimal: { temperature: 30, concentration: 1, catalyst: true },
+                feedback: "Catalysts work by providing an alternative reaction pathway with lower activation energy."
+            },
+            {
+                title: "Level 4: Concentration Shifts",
+                equation: "N₂ + 3H₂ ⇌ 2NH₃",
+                info: "This is the Haber process. Adding more reactants will shift equilibrium to the right (Le Chatelier's Principle).",
+                variables: ["temperature", "concentration", "pressure"],
+                optimal: { temperature: 450, concentration: 1.8, pressure: 2.5 },
+                feedback: "For this exothermic reaction, lower temperatures favor product formation, but we need a balance for reasonable rates."
+            },
+            {
+                title: "Level 5: Pressure Effects",
+                equation: "2SO₂ + O₂ ⇌ 2SO₃",
+                info: "This equilibrium involves gases. Increasing pressure shifts equilibrium to the side with fewer gas molecules.",
+                variables: ["temperature", "pressure"],
+                optimal: { temperature: 400, pressure: 2.8 },
+                feedback: "There are 3 moles of gas on the left and 2 on the right, so increased pressure favors the right side."
+            },
+            {
+                title: "Level 6: Temperature Shifts",
+                equation: "N₂O₄ ⇌ 2NO₂ (ΔH = +58 kJ/mol)",
+                info: "This is an endothermic reaction. Increasing temperature favors the forward reaction (more NO₂).",
+                variables: ["temperature", "pressure"],
+                optimal: { temperature: 80, pressure: 1.2 },
+                feedback: "For endothermic reactions, increasing temperature favors the forward reaction (absorbs heat)."
+            }
+        ];
+
+        // DOM Elements
+        const elements = {
+            levelSelector: document.getElementById('level-selector'),
+            gameScreen: document.getElementById('game-screen'),
+            levelTitle: document.getElementById('level-title'),
+            backToLevels: document.getElementById('back-to-levels'),
+            levelButtons: document.querySelectorAll('.level-btn'),
+            startReaction: document.getElementById('start-reaction'),
+            resetReaction: document.getElementById('reset-reaction'),
+            submitReaction: document.getElementById('submit-reaction'),
+            reactionProgress: document.getElementById('reaction-progress'),
+            reactionProgressBar: document.getElementById('reaction-progress-bar'),
+            timeElapsed: document.getElementById('time-elapsed'),
+            reactionRate: document.getElementById('reaction-rate'),
+            feedbackArea: document.getElementById('feedback-area'),
+            feedbackContent: document.getElementById('feedback-content'),
+            scoreDisplay: document.getElementById('score'),
+            nextLevel: document.getElementById('next-level'),
+            tryAgain: document.getElementById('try-again'),
+            reefHealth: document.getElementById('reef-health'),
+            reefHealthBar: document.getElementById('reef-health-bar'),
+            knowledgePoints: document.getElementById('knowledge-points'),
+            knowledgeBar: document.getElementById('knowledge-bar'),
+            reactionEquation: document.getElementById('reaction-equation'),
+            reactionInfo: document.getElementById('reaction-info'),
+            progressWave: document.getElementById('progress-wave'),
+            reactionLiquid: document.getElementById('reaction-liquid'),
+            moleculesContainer: document.getElementById('molecules-container'),
+            pollutionParticles: document.getElementById('pollution-particles'),
+            instructionsModal: document.getElementById('instructions-modal'),
+            closeInstructions: document.getElementById('close-instructions'),
+            showInstructions: document.getElementById('show-instructions'),
+            startPlaying: document.getElementById('start-playing'),
+            variableControls: {
+                temperature: document.getElementById('temperature'),
+                temperatureValue: document.getElementById('temperature-value'),
+                concentration: document.getElementById('concentration'),
+                concentrationValue: document.getElementById('concentration-value'),
+                catalyst: document.getElementById('catalyst'),
+                catalystStatus: document.getElementById('catalyst-status'),
+                surfaceArea: document.getElementById('surface-area'),
+                surfaceAreaValue: document.getElementById('surface-area-value'),
+                surfaceAreaControl: document.getElementById('surface-area-control'),
+                pressure: document.getElementById('pressure'),
+                pressureValue: document.getElementById('pressure-value'),
+                pressureControl: document.getElementById('pressure-control')
+            }
+        };
+
+        // Event Listeners
+        elements.levelButtons.forEach(button => {
+            button.addEventListener('click', () => loadLevel(parseInt(button.dataset.level)));
+        });
+
+        elements.backToLevels.addEventListener('click', () => {
+            elements.gameScreen.classList.add('hidden');
+            elements.levelSelector.classList.remove('hidden');
+            resetReaction();
+        });
+
+        elements.startReaction.addEventListener('click', startReaction);
+        elements.resetReaction.addEventListener('click', resetReaction);
+        elements.submitReaction.addEventListener('click', submitReaction);
+        elements.nextLevel.addEventListener('click', nextLevel);
+        elements.tryAgain.addEventListener('click', tryAgain);
+
+        // Variable control listeners
+        elements.variableControls.temperature.addEventListener('input', () => {
+            elements.variableControls.temperatureValue.textContent = elements.variableControls.temperature.value;
+        });
+
+        elements.variableControls.concentration.addEventListener('input', () => {
+            elements.variableControls.concentrationValue.textContent = parseFloat(elements.variableControls.concentration.value).toFixed(1);
+        });
+
+        elements.variableControls.catalyst.addEventListener('change', () => {
+            elements.variableControls.catalystStatus.textContent = elements.variableControls.catalyst.checked ? 'On' : 'Off';
+        });
+
+        elements.variableControls.surfaceArea.addEventListener('input', () => {
+            elements.variableControls.surfaceAreaValue.textContent = elements.variableControls.surfaceArea.value;
+        });
+
+        elements.variableControls.pressure.addEventListener('input', () => {
+            elements.variableControls.pressureValue.textContent = parseFloat(elements.variableControls.pressure.value).toFixed(1);
+        });
+
+        // Instruction modal
+        elements.showInstructions.addEventListener('click', () => {
+            elements.instructionsModal.classList.remove('hidden');
+        });
+
+        elements.closeInstructions.addEventListener('click', () => {
+            elements.instructionsModal.classList.add('hidden');
+        });
+
+        elements.startPlaying.addEventListener('click', () => {
+            elements.instructionsModal.classList.add('hidden');
+        });
+
+        // Initialize the game
+        function initGame() {
+            updateStatsDisplay();
+            createPollutionParticles();
+            
+            // Show instructions first time
+            if (!localStorage.getItem('gameStarted')) {
+                elements.instructionsModal.classList.remove('hidden');
+                localStorage.setItem('gameStarted', 'true');
+            }
+        }
+
+        // Load a level
+        function loadLevel(level) {
+            gameState.currentLevel = level;
+            const levelData = levels[level - 1];
+            
+            // Update UI
+            elements.levelTitle.innerHTML = `<i class="fas fa-flask mr-2"></i> <span>${levelData.title}</span>`;
+            elements.reactionEquation.textContent = levelData.equation;
+            elements.reactionInfo.textContent = levelData.info;
+            
+            // Show/hide controls based on level
+            elements.variableControls.surfaceAreaControl.classList.add('hidden');
+            elements.variableControls.pressureControl.classList.add('hidden');
+            
+            levelData.variables.forEach(variable => {
+                if (variable === 'surface-area') {
+                    elements.variableControls.surfaceAreaControl.classList.remove('hidden');
+                } else if (variable === 'pressure') {
+                    elements.variableControls.pressureControl.classList.remove('hidden');
+                }
+            });
+            
+            // Reset sliders to default
+            elements.variableControls.temperature.value = 25;
+            elements.variableControls.temperatureValue.textContent = '25';
+            elements.variableControls.concentration.value = 1;
+            elements.variableControls.concentrationValue.textContent = '1.0';
+            elements.variableControls.catalyst.checked = false;
+            elements.variableControls.catalystStatus.textContent = 'Off';
+            elements.variableControls.surfaceArea.value = 3;
+            elements.variableControls.surfaceAreaValue.textContent = '3';
+            elements.variableControls.pressure.value = 1;
+            elements.variableControls.pressureValue.textContent = '1.0';
+            
+            // Switch screens
+            elements.levelSelector.classList.add('hidden');
+            elements.gameScreen.classList.remove('hidden');
+            elements.feedbackArea.classList.add('hidden');
+            
+            // Reset reaction
+            resetReaction();
+        }
+
+        // Start the reaction simulation
+        function startReaction() {
+            if (gameState.reactionRunning) return;
+            
+            gameState.reactionRunning = true;
+            gameState.reactionStartTime = Date.now();
+            gameState.lastReactionTime = Date.now();
+            gameState.reactionProgress = 0;
+            
+            // Update button states
+            elements.startReaction.disabled = true;
+            elements.resetReaction.disabled = false;
+            
+            // Create molecules
+            createMolecules();
+            
+            // Start the reaction interval
+            gameState.reactionInterval = setInterval(updateReaction, 100);
+        }
+
+        // Update the reaction progress
+        function updateReaction() {
+            if (!gameState.reactionRunning) return;
+            
+            const now = Date.now();
+            const elapsed = (now - gameState.reactionStartTime) / 1000;
+            const delta = (now - gameState.lastReactionTime) / 1000;
+            gameState.lastReactionTime = now;
+            
+            // Calculate reaction rate based on conditions
+            const temperature = parseInt(elements.variableControls.temperature.value);
+            const concentration = parseFloat(elements.variableControls.concentration.value);
+            const catalyst = elements.variableControls.catalyst.checked;
+            
+            // Base rate depends on level
+            let baseRate = 0.5;
+            if (gameState.currentLevel >= 4) baseRate = 0.3; // Equilibrium levels are slower
+                
+            // Calculate rate modifiers
+            const tempMod = Math.min(1 + (temperature - 25) * 0.02, 3);
+            const concMod = Math.min(1 + (concentration - 1) * 0.5, 2);
+            const catalystMod = catalyst ? 2 : 1;
+            
+            // Calculate current rate
+            gameState.reactionRate = baseRate * tempMod * concMod * catalystMod;
+            
+            // Update progress
+            gameState.reactionProgress += gameState.reactionRate * delta;
+            gameState.reactionProgress = Math.min(gameState.reactionProgress, 100);
+            
+            // Update UI
+            elements.reactionProgress.textContent = `${Math.round(gameState.reactionProgress)}%`;
+            elements.reactionProgressBar.style.width = `${gameState.reactionProgress}%`;
+            elements.timeElapsed.textContent = elapsed.toFixed(1);
+            elements.reactionRate.textContent = gameState.reactionRate.toFixed(2);
+            
+            // Update liquid level
+            const liquidHeight = 30 + (gameState.reactionProgress / 100) * 40;
+            elements.reactionLiquid.style.height = `${liquidHeight}%`;
+            
+            // Show progress wave when reaction is progressing well
+            if (gameState.reactionRate > baseRate * 1.5) {
+                elements.progressWave.classList.remove('opacity-0');
+                elements.progressWave.classList.add('opacity-70');
+            } else {
+                elements.progressWave.classList.remove('opacity-70');
+                elements.progressWave.classList.add('opacity-0');
+            }
+            
+            // Update molecule movement
+            updateMolecules();
+            
+            // Check if reaction is complete
+            if (gameState.reactionProgress >= 100) {
+                clearInterval(gameState.reactionInterval);
+                elements.startReaction.disabled = true;
+                elements.resetReaction.disabled = false;
+                gameState.reactionRunning = false;
+            }
+        }
+
+        // Reset the reaction
+        function resetReaction() {
+            clearInterval(gameState.reactionInterval);
+            gameState.reactionRunning = false;
+            gameState.reactionProgress = 0;
+            
+            // Reset UI
+            elements.reactionProgress.textContent = '0%';
+            elements.reactionProgressBar.style.width = '0%';
+            elements.timeElapsed.textContent = '0';
+            elements.reactionRate.textContent = '0';
+            elements.reactionLiquid.style.height = '30%';
+            elements.progressWave.classList.remove('opacity-70');
+            elements.progressWave.classList.add('opacity-0');
+            
+            // Reset buttons
+            elements.startReaction.disabled = false;
+            elements.resetReaction.disabled = true;
+            
+            // Clear molecules
+            elements.moleculesContainer.innerHTML = '';
+        }
+
+        // Submit the reaction for evaluation
+        function submitReaction() {
+            if (gameState.reactionProgress < 100) {
+                alert("Please complete the reaction first!");
+                return;
+            }
+            
+            const levelData = levels[gameState.currentLevel - 1];
+            const temperature = parseInt(elements.variableControls.temperature.value);
+            const concentration = parseFloat(elements.variableControls.concentration.value);
+            const catalyst = elements.variableControls.catalyst.checked;
+            const pressure = elements.variableControls.pressureControl.classList.contains('hidden') ? 
+                1 : parseFloat(elements.variableControls.pressure.value);
+            
+            // Calculate score (0-100)
+            let score = 0;
+            
+            // For reaction rate levels (1-3)
+            if (gameState.currentLevel <= 3) {
+                // Score based on how close conditions are to optimal
+                const tempScore = 50 - Math.abs(temperature - levelData.optimal.temperature) * 0.5;
+                const concScore = 30 - Math.abs(concentration - levelData.optimal.concentration) * 10;
+                const catalystScore = (catalyst === levelData.optimal.catalyst) ? 20 : 0;
+                
+                score = Math.max(0, tempScore + concScore + catalystScore);
+            } 
+            // For equilibrium levels (4-6)
+            else {
+                // Score based on equilibrium position
+                const tempScore = 40 - Math.abs(temperature - levelData.optimal.temperature) * 0.4;
+                const pressureScore = 40 - Math.abs(pressure - levelData.optimal.pressure) * 10;
+                const concScore = 20 - Math.abs(concentration - levelData.optimal.concentration) * 5;
+                
+                score = Math.max(0, tempScore + pressureScore + concScore);
+            }
+            
+            // Round and ensure within bounds
+            score = Math.round(Math.min(100, Math.max(0, score)));
+            
+            // Update game state
+            gameState.reefHealth = Math.min(100, gameState.reefHealth + score * 0.5);
+            gameState.knowledgePoints = Math.min(1000, gameState.knowledgePoints + score);
+            gameState.levelsCompleted++;
+            
+            // Update stats display
+            updateStatsDisplay();
+            
+            // Show feedback
+            elements.feedbackContent.innerHTML = `
+                <div class="p-3 bg-blue-800 rounded-lg mb-2">
+                    <h4 class="font-bold text-cyan-300 mb-1">Reaction Analysis</h4>
+                    <p>${levelData.feedback}</p>
+                </div>
+                <div class="p-3 bg-blue-800 rounded-lg mb-2">
+                    <h4 class="font-bold text-purple-300 mb-1">Optimal Conditions</h4>
+                    <p>Temperature: ${levelData.optimal.temperature}°C, Concentration: ${levelData.optimal.concentration} mol/L${levelData.optimal.catalyst ? ', With Catalyst' : ''}${levelData.optimal.pressure ? ', Pressure: ' + levelData.optimal.pressure + ' atm' : ''}</p>
+                </div>
+                <div class="p-3 bg-blue-800 rounded-lg">
+                    <h4 class="font-bold text-yellow-300 mb-1">Your Conditions</h4>
+                    <p>Temperature: ${temperature}°C, Concentration: ${concentration} mol/L${catalyst ? ', With Catalyst' : ''}${pressure ? ', Pressure: ' + pressure + ' atm' : ''}</p>
+                </div>
+            `;
+            
+            elements.scoreDisplay.innerHTML = `Score: <span id="score">${score}</span> points`;
+            
+            // Show next level button if not last level
+            if (gameState.currentLevel < levels.length) {
+                elements.nextLevel.classList.remove('hidden');
+            } else {
+                elements.nextLevel.classList.add('hidden');
+            }
+            
+            elements.feedbackArea.classList.remove('hidden');
+            
+            // Remove some pollution particles (visual effect)
+            removePollutionParticles(score / 10);
+        }
+
+        // Go to next level
+        function nextLevel() {
+            loadLevel(gameState.currentLevel + 1);
+        }
+
+        // Try the level again
+        function tryAgain() {
+            elements.feedbackArea.classList.add('hidden');
+            resetReaction();
+        }
+
+        // Update stats display
+        function updateStatsDisplay() {
+            elements.reefHealth.textContent = `${Math.round(gameState.reefHealth)}%`;
+            elements.reefHealthBar.style.width = `${gameState.reefHealth}%`;
+            elements.knowledgePoints.textContent = gameState.knowledgePoints;
+            elements.knowledgeBar.style.width = `${gameState.knowledgePoints / 10}%`;
+        }
+
+        // Create molecules for the reaction
+        function createMolecules() {
+            elements.moleculesContainer.innerHTML = '';
+            
+            const colors = ['red', 'blue', 'green', 'yellow'];
+            const tubeWidth = 64; // Width of reaction tube in pixels
+            const tubeHeight = 160; // Height of reaction tube in pixels
+            
+            for (let i = 0; i < gameState.moleculeCount; i++) {
+                const molecule = document.createElement('div');
+                molecule.className = 'molecule absolute rounded-full';
+                
+                // Random position within tube
+                const left = Math.random() * (tubeWidth - 10);
+                const top = 30 + Math.random() * (tubeHeight - 30);
+                
+                // Random size and color
+                const size = 5 + Math.random() * 5;
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                
+                molecule.style.width = `${size}px`;
+                molecule.style.height = `${size}px`;
+                molecule.style.left = `${left}px`;
+                molecule.style.top = `${top}px`;
+                molecule.style.backgroundColor = color;
+                
+                // Random initial velocity
+                molecule.dataset.vx = (Math.random() - 0.5) * 2;
+                molecule.dataset.vy = (Math.random() - 0.5) * 2;
+                
+                elements.moleculesContainer.appendChild(molecule);
+            }
+        }
+
+        // Update molecule positions
+        function updateMolecules() {
+            const molecules = document.querySelectorAll('.molecule');
+            const tubeWidth = 64;
+            const tubeHeight = 160;
+            const liquidHeight = parseFloat(elements.reactionLiquid.style.height);
+            
+            // Get reaction conditions
+            const temperature = parseInt(elements.variableControls.temperature.value);
+            const catalyst = elements.variableControls.catalyst.checked;
+            
+            // Temperature affects speed (0.5x to 2x)
+            const tempFactor = 0.5 + (temperature / 100);
+            // Catalyst adds extra speed
+            const catalystFactor = catalyst ? 1.5 : 1;
+            
+            molecules.forEach(molecule => {
+                // Get current position and velocity
+                let left = parseFloat(molecule.style.left);
+                let top = parseFloat(molecule.style.top);
+                let vx = parseFloat(molecule.dataset.vx);
+                let vy = parseFloat(molecule.dataset.vy);
+                
+                // Apply temperature and catalyst effects
+                vx = vx * tempFactor * catalystFactor;
+                vy = vy * tempFactor * catalystFactor;
+                
+                // Update position
+                left += vx;
+                top += vy;
+                
+                // Boundary checks (bounce off walls)
+                const size = parseFloat(molecule.style.width);
+                
+                if (left <= 0) {
+                    left = 0;
+                    vx = -vx * 0.8; // Bounce with some energy loss
+                } else if (left >= tubeWidth - size) {
+                    left = tubeWidth - size;
+                    vx = -vx * 0.8;
+                }
+                
+                if (top <= 30) { // Top of liquid
+                    top = 30;
+                    vy = -vy * 0.8;
+                } else if (top >= tubeHeight - size) {
+                    top = tubeHeight - size;
+                    vy = -vy * 0.8;
+                }
+                
+                // Update DOM
+                molecule.style.left = `${left}px`;
+                molecule.style.top = `${top}px`;
+                molecule.dataset.vx = vx;
+                molecule.dataset.vy = vy;
+                
+                // Occasionally change direction slightly
+                if (Math.random() < 0.05) {
+                    molecule.dataset.vx += (Math.random() - 0.5) * 0.5;
+                    molecule.dataset.vy += (Math.random() - 0.5) * 0.5;
+                }
+                
+                // Limit maximum speed
+                const maxSpeed = 5;
+                const speed = Math.sqrt(vx*vx + vy*vy);
+                if (speed > maxSpeed) {
+                    molecule.dataset.vx = (vx / speed) * maxSpeed;
+                    molecule.dataset.vy = (vy / speed) * maxSpeed;
+                }
+            });
+        }
+
+        // Create pollution particles
+        function createPollutionParticles() {
+            elements.pollutionParticles.innerHTML = '';
+            
+            for (let i = 0; i < gameState.pollutionCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'absolute rounded-sm opacity-70';
+                
+                // Random position in the game container
+                const left = Math.random() * 100;
+                const top = Math.random() * 100;
+                
+                // Random size and color (dirty colors)
+                const size = 2 + Math.random() * 8;
+                const colors = ['#5a5a5a', '#8b4513', '#556b2f', '#a0522d', '#808000'];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${left}%`;
+                particle.style.top = `${top}%`;
+                particle.style.backgroundColor = color;
+                particle.style.transform = `rotate(${Math.random() * 360}deg)`;
+                
+                // Random float animation
+                particle.style.animation = `jellyFloat ${5 + Math.random() * 10}s ease-in-out infinite`;
+                particle.style.animationDelay = `${Math.random() * 5}s`;
+                
+                elements.pollutionParticles.appendChild(particle);
+            }
+        }
+
+        // Remove some pollution particles (when reef health improves)
+        function removePollutionParticles(count) {
+            const particles = document.querySelectorAll('#pollution-particles > div');
+            const particlesToRemove = Math.min(count, particles.length);
+            
+            for (let i = 0; i < particlesToRemove; i++) {
+                if (particles[i]) {
+                    particles[i].style.opacity = '0';
+                    particles[i].style.transition = 'opacity 1s';
+                    
+                    setTimeout(() => {
+                        if (particles[i]) {
+                            particles[i].remove();
+                        }
+                    }, 1000);
+                }
+            }
+        }
+
+        // Initialize the game when loaded
+        window.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
